@@ -1,33 +1,44 @@
 @echo off
 chcp 65001 >nul
-cls
 
-:: ==============================================
-:: 脚本名称：移除右键CMD和PowerShell菜单.bat
-:: 功    能：一键清空由上方脚本添加的所有右键终端菜单
-:: 使用方法：直接双击运行，自动获取管理员权限
-:: ==============================================
+:: ============================================================
+:: 脚本用途：
+::   一键移除 Windows 文件夹空白处及文件夹图标上的“在此处打开 CMD”
+::   和“在此处打开 PowerShell”的右键菜单选项，清理右键菜单。
+::
+:: 使用方法：
+::   1. 将本文件保存为 .bat 格式（例如：RemoveCmdPs.bat）。
+::   2. 直接双击运行该文件（脚本会自动请求管理员权限）。
+::   3. 运行成功后，右键菜单中的相关选项将被彻底移除。
+:: ============================================================
 
-%1 mshta vbscript:CreateObject("Shell.Application").ShellExecute("cmd.exe","/c %~s0 ::","","runas",1)(window.close)&&exit
-cd /d "%~dp0"
+:: --- 自动请求管理员权限 ---
+>nul 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
+if '%errorlevel%' NEQ '0' (
+    echo 正在请求管理员权限...
+    goto UACPrompt
+) else ( goto gotAdmin )
+:UACPrompt
+    echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\getadmin.vbs"
+    echo UAC.ShellExecute "%~s0", "", "", "runas", 1 >> "%temp%\getadmin.vbs"
+    "%temp%\getadmin.vbs"
+    exit /B
+:gotAdmin
+    if exist "%temp%\getadmin.vbs" ( del "%temp%\getadmin.vbs" )
+    pushd "%CD%"
+    CD /D "%~dp0"
+:: --- 管理员权限获取结束 ---
 
-echo Windows Registry Editor Version 5.00 >del.reg
-echo [-HKEY_CLASSES_ROOT\Directory\Background\shell\OpenCMD] >>del.reg
-echo [-HKEY_CLASSES_ROOT\Directory\Background\shell\OpenPS] >>del.reg
-echo [-HKEY_CLASSES_ROOT\Directory\Background\shell\AdminCMD] >>del.reg
-echo [-HKEY_CLASSES_ROOT\Directory\Background\shell\AdminPS] >>del.reg
-echo [-HKEY_CLASSES_ROOT\Directory\shell\OpenCMD] >>del.reg
-echo [-HKEY_CLASSES_ROOT\Directory\shell\OpenPS] >>del.reg
-echo [-HKEY_CLASSES_ROOT\Directory\shell\AdminCMD] >>del.reg
-echo [-HKEY_CLASSES_ROOT\Directory\shell\AdminPS] >>del.reg
+echo 正在清理右键菜单中的 CMD 和 PowerShell 选项...
 
-reg import del.reg
-del /f/q del.reg
+:: 移除“在此处打开 CMD”
+reg delete "HKLM\SOFTWARE\Classes\Directory\Background\shell\OpenCmdHere" /f
+reg delete "HKLM\SOFTWARE\Classes\Directory\shell\OpenCmdHere" /f
+
+:: 移除“在此处打开 PowerShell”
+reg delete "HKLM\SOFTWARE\Classes\Directory\Background\shell\OpenPowerShellHere" /f
+reg delete "HKLM\SOFTWARE\Classes\Directory\shell\OpenPowerShellHere" /f
 
 echo.
-echo ==============================================
-echo ✅ 右键终端菜单已全部清除完毕
-echo ==============================================
-echo.
+echo 清理完成！右键菜单已恢复干净。
 pause
-exit
