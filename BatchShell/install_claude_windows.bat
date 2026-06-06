@@ -20,15 +20,6 @@ fltmc >nul 2>&1 || (
     exit /b 1
 )
 
-echo ✅ 正在检查系统依赖...
-echo.
-
-:: 安装 VC++ 运行库
-echo 📦 正在安装必备运行库 VC++ Redist...
-curl -L -s "https://aka.ms/vs/17/release/vc_redist.x64.exe" -o "%temp%\vc_redist.x64.exe"
-start /wait "" "%temp%\vc_redist.x64.exe" /quiet /norestart
-del "%temp%\vc_redist.x64.exe" >nul 2>&1
-echo ✅ 运行库安装完成
 
 echo.
 echo ======================================================
@@ -42,7 +33,7 @@ if %errorlevel% equ 0 (
     echo ✅ 官方安装成功
 ) else (
     echo ⚠️  官方脚本失败，使用 winget 安装...
-    winget install Anthropic.ClaudeCode --accept-source-agreements --accept-package-agreements -h
+    winget install Anthropic.ClaudeCode
 )
 
 echo.
