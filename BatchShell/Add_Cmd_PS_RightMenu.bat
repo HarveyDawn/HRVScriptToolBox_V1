@@ -16,11 +16,16 @@ cls
 %1 mshta vbscript:CreateObject("Shell.Application").ShellExecute("cmd.exe","/c %~s0 ::","","runas",1)(window.close)&&exit
 cd /d "%~dp0"
 
-:: 生成注册表文件（UTF-8 无乱码）
+:: ==============================================
+:: 关键修复：生成 ANSI 编码注册表，解决右键菜单中文乱码
+:: ==============================================
+chcp 936 >nul
+
+:: 生成注册表
 echo Windows Registry Editor Version 5.00 >tmp.reg
 echo.>>tmp.reg
 
-::普通CMD 空白目录右键
+::普通CMD
 echo [-HKEY_CLASSES_ROOT\Directory\Background\shell\OpenCMD] >>tmp.reg
 echo [HKEY_CLASSES_ROOT\Directory\Background\shell\OpenCMD] >>tmp.reg
 echo @="在此处打开 CMD" >>tmp.reg
@@ -58,7 +63,7 @@ echo [HKEY_CLASSES_ROOT\Directory\Background\shell\AdminPS\command] >>tmp.reg
 echo @="powershell -windowstyle hidden -Command Start-Process powershell -ArgumentList '-NoExit,Set-Location,'""""%%V"""" -Verb RunAs" >>tmp.reg
 echo.>>tmp.reg
 
-::文件夹图标右键
+::文件夹右键
 echo [-HKEY_CLASSES_ROOT\Directory\shell\OpenCMD] >>tmp.reg
 echo [HKEY_CLASSES_ROOT\Directory\shell\OpenCMD] >>tmp.reg
 echo @="在此处打开 CMD" >>tmp.reg
@@ -90,9 +95,12 @@ echo "Icon"="powershell.exe" >>tmp.reg
 echo [HKEY_CLASSES_ROOT\Directory\shell\AdminPS\command] >>tmp.reg
 echo @="powershell -windowstyle hidden -Command Start-Process powershell -ArgumentList '-NoExit,Set-Location,'""""%%V"""" -Verb RunAs" >>tmp.reg
 
-:: 导入注册表并清理临时文件
+:: 导入注册表
 reg import tmp.reg
 del /f/q tmp.reg
+
+:: 恢复UTF-8显示脚本中文
+chcp 65001 >nul
 
 echo.
 echo ==============================================
